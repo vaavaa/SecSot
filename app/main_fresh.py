@@ -1,7 +1,7 @@
 import os
 
 from telegram import Update, constants
-from telegram.ext import Updater, CommandHandler, MessageHandler, filters, CallbackContext, Application
+from telegram.ext import Updater, CommandHandler, MessageHandler, filters, CallbackContext, Application, ContextTypes
 
 from ollama import ChatResponse
 from ollama import Client
@@ -10,13 +10,39 @@ from dotenv import load_dotenv
 
 # Токен вашего бота
 TOKEN = os.getenv("BOT_TOKEN", "TOKEN")
+USER_ID = os.getenv("USER_ID", 162507919)
 
 if TOKEN=="TOKEN":
     load_dotenv()
     TOKEN = os.getenv("BOT_TOKEN", "TOKEN")
+    USER_ID = os.getenv("USER_ID", 162507919)
 
 async def start(update: Update, context: CallbackContext):
      print(f"Бот запущен и ставит лайки за сообщения! 👍")
+
+
+async def forward_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    # Проверяем, что сообщение пришло из группы
+    if update.effective_chat.type == 'group':
+        try:
+            # Пересылаем сообщение в личный чат пользователя
+            await context.bot.forward_message(
+                chat_id=USER_ID,
+                from_chat_id=update.effective_chat.id,
+                message_id=update.message.message_id
+            )
+        except Exception as e:
+            print(f"Ошибка пересылки: {e}")
+
+
+async def send_to_user(context: ContextTypes.DEFAULT_TYPE, message_str:str) -> None:
+    try:
+        await context.bot.send_message(
+            chat_id=USER_ID,  # Замените на реальный ID пользователя
+            text=message_str
+        )
+    except Exception as e:
+        print(f"Ошибка отправки: {e}")
 
 
 async def react_with_like(update: Update, context: CallbackContext):
@@ -56,6 +82,7 @@ async def analyze_message(update: Update, context: CallbackContext):
         print(f"Получили ответ: {response['message']['content']}")
         if 'ДА' in str(response['message']['content']).upper():
             # Вызываем функцию с реакцией
+            await forward_message(update, context)
             await react_with_like(update, context)
 
     except Exception as e:
