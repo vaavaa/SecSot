@@ -1,7 +1,7 @@
 import os
 
 from telegram import Update, constants
-from telegram.ext import Updater, CommandHandler, MessageHandler, filters, CallbackContext, Application, ContextTypes
+from telegram.ext import CommandHandler, MessageHandler, filters, CallbackContext, Application, ContextTypes
 
 from ollama import ChatResponse
 from ollama import Client
@@ -10,15 +10,16 @@ from dotenv import load_dotenv
 
 # Токен вашего бота
 TOKEN = os.getenv("BOT_TOKEN", "TOKEN")
-USER_ID = os.getenv("USER_ID", 162507919)
+USER_IDs = os.getenv("USER_ID", [162507919])
 
-if TOKEN=="TOKEN":
+if TOKEN == "TOKEN":
     load_dotenv()
     TOKEN = os.getenv("BOT_TOKEN", "TOKEN")
-    USER_ID = os.getenv("USER_ID", 162507919)
+    USER_IDs = os.getenv("USER_ID", [162507919])
+
 
 async def start(update: Update, context: CallbackContext):
-     print(f"Бот запущен и ставит лайки за сообщения! 👍")
+    print(f"Бот запущен и ставит лайки за сообщения! 👍")
 
 
 async def forward_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -26,21 +27,23 @@ async def forward_message(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     if update.effective_chat.type == 'group':
         try:
             # Пересылаем сообщение в личный чат пользователя
-            await context.bot.forward_message(
-                chat_id=USER_ID,
-                from_chat_id=update.effective_chat.id,
-                message_id=update.message.message_id
-            )
+            for user_id in USER_IDs:
+                await context.bot.forward_message(
+                    chat_id=user_id,
+                    from_chat_id=update.effective_chat.id,
+                    message_id=update.message.message_id
+                )
         except Exception as e:
             print(f"Ошибка пересылки: {e}")
 
 
-async def send_to_user(context: ContextTypes.DEFAULT_TYPE, message_str:str) -> None:
+async def send_to_user(context: ContextTypes.DEFAULT_TYPE, message_str: str) -> None:
     try:
-        await context.bot.send_message(
-            chat_id=USER_ID,  # Замените на реальный ID пользователя
-            text=message_str
-        )
+        for user_id in USER_IDs:
+            await context.bot.send_message(
+                chat_id=user_id,  # Замените на реальный ID пользователя
+                text=message_str
+            )
     except Exception as e:
         print(f"Ошибка отправки: {e}")
 
@@ -63,7 +66,6 @@ async def react_with_like(update: Update, context: CallbackContext):
 
 
 async def analyze_message(update: Update, context: CallbackContext):
-
     message_text = update.message.text or "Медиа-контент"
 
     if not message_text:
