@@ -10,12 +10,12 @@ from dotenv import load_dotenv
 
 # Токен вашего бота
 TOKEN = os.getenv("BOT_TOKEN", "TOKEN")
-USER_IDs = os.getenv("USER_ID", [162507919])
+USER_IDs = list(str(os.getenv("USER_ID", "162507919")).split(","))
 
 if TOKEN == "TOKEN":
     load_dotenv()
     TOKEN = os.getenv("BOT_TOKEN", "TOKEN")
-    USER_IDs = os.getenv("USER_ID", [162507919])
+    USER_IDs = list(str(os.getenv("USER_ID", "162507919")).split(","))
 
 
 async def start(update: Update, context: CallbackContext):
@@ -29,7 +29,7 @@ async def forward_message(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             # Пересылаем сообщение в личный чат пользователя
             for user_id in USER_IDs:
                 await context.bot.forward_message(
-                    chat_id=user_id,
+                    chat_id=int(user_id),
                     from_chat_id=update.effective_chat.id,
                     message_id=update.message.message_id
                 )
@@ -41,7 +41,7 @@ async def send_to_user(context: ContextTypes.DEFAULT_TYPE, message_str: str) -> 
     try:
         for user_id in USER_IDs:
             await context.bot.send_message(
-                chat_id=user_id,  # Замените на реальный ID пользователя
+                chat_id=int(user_id),  # Замените на реальный ID пользователя
                 text=message_str
             )
     except Exception as e:
