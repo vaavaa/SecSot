@@ -75,7 +75,7 @@ async def analyze_message(update: Update, context: CallbackContext):
     )
     # Инициализация клиента Ollama
     try:
-        response: ChatResponse = client.chat(model='llama3.1:latest', messages=[
+        response: ChatResponse = client.chat(model='qwen2.5:14b', messages=[
             {
                 'role': 'user',
                 'content': f"Содержит ли сообщение информацию о технической ошибке, ответь да или нет: {message_text}",
